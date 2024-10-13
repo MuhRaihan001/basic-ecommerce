@@ -23,7 +23,20 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
-const upload = multer({ storage: storage });
+
+const fileFilter = (req, file, cb) => {
+    const allowedFileTypes = /jpeg|jpg|png/;
+    const extName = allowedFileTypes.test(file.originalname.toLowerCase());
+    const mimeType = allowedFileTypes.test(file.mimetype);
+
+    if (extName && mimeType) {
+        cb(null, true); // File diterima
+    } else {
+        cb(new Error('Hanya file dengan format .jpg atau .png yang diizinkan'), false);
+    }
+};
+
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.get("/", verifyToken, async (req, res) => {
     try {
@@ -34,16 +47,26 @@ router.get("/", verifyToken, async (req, res) => {
     }
 });
 
-router.post("/add", upload.single('file'), async (req, res) => {
-    const { name, description, price, stock } = req.body;
-    const file = req.file.filename;
-    try {
-        const response = await addProduct(name, description, price, stock, file);
-        res.status(response.status).json({ status: 201, message: "Product added successfully" });
-    } catch (error) {
-        res.status(500).json({ status: 500, message: "Internal server error" });
-    }
+router.post("/add", (req, res, next) => {
+    upload.single('file')(req, res, async (err) => {
+        if(err){
+            if(err.message === 'Hanya file dengan format .jpg atau .png yang diizinkan'){
+                return res.status(400).json({ status: 400, message: err.message });
+            }
+            return res.status(500).json({ status: 500, message: 'File upload failed' });
+        }
+
+        const { name, description, price, stock } = req.body;
+        const file = req.file ? req.file.filename : null;
+        try {
+            const response = await addProduct(name, description, price, stock, file);
+            res.status(response.status).json({ status: 201, message: "Product added successfully" });
+        } catch (error) {
+            res.status(500).json({ status: 500, message: "Internal server error" });
+        }
+    });
 });
+
 
 router.put("/:id/price", verifyToken, async (req, res) => {
     const productId = req.params.id;
