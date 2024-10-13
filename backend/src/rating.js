@@ -4,11 +4,10 @@ async function showProductReview(productid){
     const query = "SELECT * FROM `ratings` WHERE productid = ?";
     try{
         const result = await executeQuery(query, [productid]);
-        if(result.length > 0){
+        if(result.length === 0){
             return {status: 200, message: "review showed successfully", review: result};
-        }else{
-            return {status: 404, message: "review not found"};
         }
+        return {status: 200, message: "review showed successfully", review: result};
     }catch(error){
         console.log(error);
         throw error;

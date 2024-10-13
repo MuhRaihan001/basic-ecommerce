@@ -63,37 +63,44 @@ async function addProductStock(productId, amount){
     }
 }
 
-async function checkOutProduct(userid, productId, amount){
+async function checkOutProduct(userId, productId, amount) {
     try{
         const query = "SELECT * FROM `product` WHERE `id` = ?";
         const result = await executeQuery(query, [productId]);
-        if(result.length > 0){
-            if(result[0].stock >= amount){
-                const userMoney = await getUserMoney(userid);
-                if(userMoney >= result[0].price * amount){
-                    const newMoney = userMoney - result[0].price * amount;
-                    await setUserMoney(userid, newMoney)
 
-                    const updateStockQuery = "UPDATE `product` SET `stock` = `stock` - ? WHERE `id` = ?";
-                    await executeQuery(updateStockQuery, [amount, productId]);
-
-                    const updateSoldQuery="UPDATE `product` SET `sold`=`sold` + ? WHERE `id` = ?";
-                    await executeQuery(updateSoldQuery,[amount,productId]);
-
-                    return {status: 200, message: "Product checked out successfully"};
-                }else{
-                    return { status: 402, message: "Insufficient funds" };
-                }
-            }else{
-                return {status: 409, message: "Insufficient stock of goods"};
-            }
-        }else{
-            return {status: 404, message: "Product not found"};
+        if(result.length === 0){
+            return { status: 404, message: "Product not found" };
         }
+
+        const product = result[0];
+
+        if (product.stock < amount){
+            return { status: 409, message: "Insufficient stock of goods" };
+        }
+
+        const userMoney = await getUserMoney(userId);
+        const totalCost = product.price * amount;
+
+        if(userMoney < totalCost){
+            return { status: 402, message: "Insufficient funds" };
+        }
+
+        const newMoney = userMoney - totalCost;
+        await setUserMoney(userId, newMoney);
+
+        const updateStockQuery = "UPDATE `product` SET `stock` = `stock` - ? WHERE `id` = ?";
+        await executeQuery(updateStockQuery, [amount, productId]);
+
+        const updateSoldQuery = "UPDATE `product` SET `sold` = `sold` + ? WHERE `id` = ?";
+        await executeQuery(updateSoldQuery, [amount, productId]);
+
+        return { status: 200, message: "Product checked out successfully" };
+        
     }catch(error){
         throw error;
     }
 }
+
 
 async function getTotalProductSold(){
     try{

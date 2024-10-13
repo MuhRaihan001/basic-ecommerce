@@ -90,6 +90,28 @@ function Home() {
         setSelectedProduct(null);
     };
 
+    const addOrderList = async (productid) =>{
+        try{
+            const currentDate = new Date();
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            const response = await fetch("/api/order/add",{
+                method: "POST",
+                headers:{
+                    "Content-Type": "application/json",
+                    "auth": data.token
+                },
+                body: JSON.stringify({userid: data.account[0].id, productid: productid, date: formattedDate})
+            })
+            const data = await response.json();
+            console.log(data)
+            if(data.status != 200){
+                alert("Failed to add order");
+            }
+        }catch(error){
+            console.log(error);
+        }
+    }
+
     const buyProduct = async (amount) =>{
         if (selectedProduct) {
             try{
@@ -104,6 +126,7 @@ function Home() {
                 switch(response.status){
                     case 200:{
                         alert("Product bought successfully");
+                        addOrderList(selectedProduct.id);
                         getTotalStock();
                         getTotalSold();
                         closeModal();

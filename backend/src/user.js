@@ -81,4 +81,36 @@ async function loginEmail(email, password){
     }
 }
 
-module.exports = {loginUsername, createAccount, loginEmail, getUserMoney, setUserMoney};
+async function refundUserMoney(userid, productid) {
+    try{
+      const query = "SELECT * FROM `orders` WHERE `userid` = ? AND `productid` = ? AND `status` = ?";
+      const order = await executeQuery(query, [userid, productid, "Pending"]);
+  
+      if(order.length === 0){
+        return { status: 404, message: "Order not found" };
+      }
+  
+      query = "SELECT * FROM `product` WHERE `productid` = ?";
+      const product = await executeQuery(query, [productid]);
+  
+      if(product.length === 0){
+        return{ status: 404, message: "Product not found" };
+      }
+  
+      const userMoney = await getUserMoney(userid);
+      setUserMoney(userMoney - product[0].price);
+  
+      query = "DELETE FROM `orders` WHERE `userid` = ? AND `productid` = ? AND status = ?";
+      await executeQuery(query, [userid, productid, "Pending"]);
+
+      query = "UPDATE `product` SET `stock` ? AND `sold` = ?";
+      await executeQuery(query, [product[0].stock + 1, product[0].sold + 1]);
+  
+      return { status: 200, message: "Refund successful" };
+    }catch(error){
+      console.error("An error occurred while trying to refund user money:", error);
+      throw error;
+    }
+  }
+
+module.exports = {loginUsername, createAccount, loginEmail, getUserMoney, setUserMoney, refundUserMoney};
