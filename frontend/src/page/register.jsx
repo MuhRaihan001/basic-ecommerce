@@ -31,6 +31,11 @@ const Register = () => {
                 }
                 case 409:{
                     alert("Username or Email already exists");
+                    break;
+                }
+                default:{
+                    alert("Registration failed");
+                    break;
                 }
             }
         }catch(error){

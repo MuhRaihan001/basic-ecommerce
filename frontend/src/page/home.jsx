@@ -25,7 +25,86 @@ function Home() {
         }
     }, [rawData]);
 
+    const handleProduct = (product) => {
+        setSelectedProduct(product);
+    };
+
+    const closeModal = () => {
+        setSelectedProduct(null);
+    };
+
+    const buyProduct = async (amount) => {
+        if (selectedProduct && data) {
+            try {
+                const response = await fetch(`/api/product/${selectedProduct.id}/checkout`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "auth": data.token
+                    },
+                    body: JSON.stringify({ userid: data.account[0].id, amount: amount })
+                });
+                switch (response.status) {
+                    case 200:
+                        alert("Product bought successfully");
+                        addOrderList(selectedProduct.id);
+                        getTotalStock();
+                        getTotalSold();
+                        closeModal();
+                        break;
+                    case 402:
+                        alert("Insufficient balance");
+                        break;
+                    case 409:
+                        alert("Product not available");
+                        break;
+                    case 404:
+                        alert("Product not found");
+                        break;
+                    default:
+                        alert("Error");
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    const addOrderList = useCallback(async (productid) => {
+        if (!data) return; // Ensure data is defined
+
+        try {
+            const currentDate = new Date();
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            const response = await fetch("/api/order/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "auth": data.token
+                },
+                body: JSON.stringify({ userid: data.account[0].id, productid: productid, date: formattedDate })
+            });
+            const result = await response.json();
+            console.log(result);
+            if (result.status !== 200) {
+                alert("Failed to add order");
+                await fetch("/user/refund", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "auth": data.token
+                    },
+                    body: JSON.stringify({ id: data.account[0].id, productid: productid }) // Refund their money
+                });
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }, [data]); // data is still necessary here, but we added a null check
+
     const getAllProduct = useCallback(async () => {
+        if (!data) return; // Ensure data is defined
+
         try {
             const response = await fetch('/api/product', {
                 method: 'GET',
@@ -35,15 +114,18 @@ function Home() {
             });
             if (response.status === 403) {
                 navigate("/login");
+            } else {
+                const result = await response.json();
+                setProducts(result.list || []);
             }
-            const result = await response.json();
-            setProducts(result.list || []);
         } catch (error) {
             console.log(error);
         }
     }, [data, navigate]);
 
     const getTotalSold = useCallback(async () => {
+        if (!data) return; // Ensure data is defined
+
         try {
             const response = await fetch("/api/product/totalsold", {
                 method: "GET",
@@ -63,6 +145,8 @@ function Home() {
     }, [data, navigate]);
 
     const getTotalStock = useCallback(async () => {
+        if (!data) return; // Ensure data is defined
+
         try {
             const response = await fetch("/api/product/totalstock", {
                 method: "GET",
@@ -81,86 +165,6 @@ function Home() {
             console.log(error);
         }
     }, [data, navigate]);
-
-    const handleProduct = (product) => {
-        setSelectedProduct(product);
-    };
-
-    const closeModal = () => {
-        setSelectedProduct(null);
-    };
-
-    const addOrderList = async (productid) =>{
-        try{
-            const currentDate = new Date();
-            const formattedDate = currentDate.toISOString().split('T')[0];
-            const response = await fetch("/api/order/add",{
-                method: "POST",
-                headers:{
-                    "Content-Type": "application/json",
-                    "auth": data.token
-                },
-                body: JSON.stringify({userid: data.account[0].id, productid: productid, date: formattedDate})
-            })
-            const data = await response.json();
-            console.log(data)
-            if(data.status != 200){
-                alert("Failed to add order");
-                await fetch("/user/reffund",{
-                    method: "POST",
-                    headers:{
-                        "Content-Type": "application/json",
-                        "auth": data.token
-                    },
-                    body: JSON.stringify({ id: data.account[0].id, productid: productid }) //Reffund their money
-                });
-            }
-        }catch(error){
-            console.log(error);
-        }
-    }
-
-    const buyProduct = async (amount) =>{
-        if (selectedProduct) {
-            try{
-                const response = await fetch(`/api/product/${selectedProduct.id}/checkout`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "auth": data.token
-                    },
-                    body: JSON.stringify({userid: data.account[0].id, amount: amount})
-                });
-                switch(response.status){
-                    case 200:{
-                        alert("Product bought successfully");
-                        addOrderList(selectedProduct.id);
-                        getTotalStock();
-                        getTotalSold();
-                        closeModal();
-                        break;
-                    }
-                    case 402:{
-                        alert("Insufficient balance");
-                        break;
-                    }
-                    case 409:{
-                        alert("Product not available");
-                        break;
-                    }
-                    case 404:{
-                        alert("Product not found");
-                        break;
-                    }
-                    default:{
-                        alert("Error");
-                    }
-                }
-            }catch(error){
-                console.log(error);
-            }
-        }
-    }
 
     useEffect(() => {
         if (data) {
@@ -208,13 +212,13 @@ function Home() {
                             <p>Sold: {selectedProduct.sold}</p>
                             <p className="price">{formatter.format(selectedProduct.price)}</p>
                             <label htmlFor="quantity">Quantity:</label>
-                            <input 
-                                type="number" 
-                                id="quantity" 
-                                value={quantity} 
-                                min="1" 
-                                max={selectedProduct.stock} 
-                                onChange={(e) => setQuantity(Math.max(1, Math.min(selectedProduct.stock, e.target.value)))} 
+                            <input
+                                type="number"
+                                id="quantity"
+                                value={quantity}
+                                min="1"
+                                max={selectedProduct.stock}
+                                onChange={(e) => setQuantity(Math.max(1, Math.min(selectedProduct.stock, e.target.value)))}
                             />
                             <button onClick={() => buyProduct(quantity)}>Check out</button>
                         </div>
