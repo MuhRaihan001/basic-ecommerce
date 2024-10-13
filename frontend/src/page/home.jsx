@@ -106,6 +106,14 @@ function Home() {
             console.log(data)
             if(data.status != 200){
                 alert("Failed to add order");
+                await fetch("/user/reffund",{
+                    method: "POST",
+                    headers:{
+                        "Content-Type": "application/json",
+                        "auth": data.token
+                    },
+                    body: JSON.stringify({ id: data.account[0].id, productid: productid }) //Reffund their money
+                });
             }
         }catch(error){
             console.log(error);

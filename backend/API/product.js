@@ -30,7 +30,7 @@ const fileFilter = (req, file, cb) => {
     const mimeType = allowedFileTypes.test(file.mimetype);
 
     if (extName && mimeType) {
-        cb(null, true); // File diterima
+        cb(null, true);
     } else {
         cb(new Error('Hanya file dengan format .jpg atau .png yang diizinkan'), false);
     }
