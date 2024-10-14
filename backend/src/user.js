@@ -31,6 +31,16 @@ async function createAccount(username, email, password){
         if(await isUsernameExist(username) || await isEmailExist(email)){
             return {status: 409, message: "Username or Email already exists"};
         }
+
+        if(password.length < 8){
+            return {status: 400, message: "Password must be at least 8 characters"};
+        }
+
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
+        }
+
         const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUND));
         const query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
         await executeQuery(query, [username, email, hashedPassword]);
@@ -77,6 +87,74 @@ async function loginEmail(email, password){
         }
     }catch(error){
         console.error("An error occurred while trying to login:", error);
+        throw error;
+    }
+}
+
+async function changePassword(userid, password, newPassword){
+    try{
+        if(!userid || !password || !newPassword){
+            return {status: 400, message: "Missing required fields"};
+        }
+
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
+        }
+
+        const query = "SELECT * FROM `users` WHERE `id` = ?";
+        const user = await executeQuery(query, [userid]);
+
+        if(user.length === 0){
+            return {status: 404, message: "User not found"};
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
+        if(!isValidPassword){
+            return {status: 401, message: "Invalid password"};
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.SALT_ROUND));
+        const newQuery = "UPDATE `users` SET `password` = ? WHERE `id` = ?";
+
+        await executeQuery(newQuery, [hashedPassword, userid]);
+        return {status: 200, message: "Password changed successfully"};
+
+    }catch(error){
+        console.error("An error occurred while trying to change password:", error);
+        throw error;
+    }
+}
+
+async function changeUsername(userid, password, newUsername){
+    try{
+        
+        if(!userid || !password || !newUsername){
+            return {status: 400, message: "Missing required fields"};
+        }
+
+        const query = "SELECT * FROM `users` WHERE `id` = ?";
+        const user = await executeQuery(query, [userid]);
+
+        if(user.length === 0){
+            return {status: 404, message: "User not found"};
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
+        if(!isValidPassword){
+            return {status: 401, message: "Invalid password"};
+        }
+
+        if(newUsername.length < 5){
+            return {status: 400, message: "Username must be at least 5 characters long"};
+        }
+
+        const newQuery = "UPDATE `users` SET `username` = ? WHERE `id` = ?";
+        await executeQuery(newQuery, [newUsername, userid]);
+        return {status: 200, message: "Username changed successfully"};
+
+    }catch(error){
+        console.error("An error occurred while trying to change username:", error);
         throw error;
     }
 }

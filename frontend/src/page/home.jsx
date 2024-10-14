@@ -71,7 +71,7 @@ function Home() {
     }
 
     const addOrderList = useCallback(async (productid) => {
-        if (!data) return; // Ensure data is defined
+        if (!data) return;
 
         try {
             const currentDate = new Date();
@@ -100,10 +100,10 @@ function Home() {
         } catch (error) {
             console.log(error);
         }
-    }, [data]); // data is still necessary here, but we added a null check
+    }, [data]);
 
     const getAllProduct = useCallback(async () => {
-        if (!data) return; // Ensure data is defined
+        if (!data) return;
 
         try {
             const response = await fetch('/api/product', {
@@ -113,7 +113,7 @@ function Home() {
                 }
             });
             if (response.status === 403) {
-                navigate("/login");
+                navigate("/login-page");
             } else {
                 const result = await response.json();
                 setProducts(result.list || []);
@@ -124,7 +124,7 @@ function Home() {
     }, [data, navigate]);
 
     const getTotalSold = useCallback(async () => {
-        if (!data) return; // Ensure data is defined
+        if (!data) return;
 
         try {
             const response = await fetch("/api/product/totalsold", {
@@ -134,7 +134,7 @@ function Home() {
                 }
             });
             if (response.status === 403) {
-                navigate("/login");
+                navigate("/login-page");
             } else {
                 const result = await response.json();
                 setTotalSold(result.result[0].total_sold);
@@ -145,7 +145,7 @@ function Home() {
     }, [data, navigate]);
 
     const getTotalStock = useCallback(async () => {
-        if (!data) return; // Ensure data is defined
+        if (!data) return;
 
         try {
             const response = await fetch("/api/product/totalstock", {
@@ -155,7 +155,7 @@ function Home() {
                 }
             });
             if (response.status === 403) {
-                navigate("/login");
+                navigate("/login-page");
             } else {
                 const result = await response.json();
                 console.log(result);
