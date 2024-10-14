@@ -1,4 +1,3 @@
-const sql = require("../database");
 const bcrypt = require("bcrypt");
 const { executeQuery } = require("./query/sql");
 require("dotenv").config();
@@ -52,39 +51,20 @@ async function createAccount(username, email, password){
 }
 
 async function loginUsername(username, password){
-    const query = "SELECT * FROM users WHERE username = ?";
     try{
+        if(!username || !password){
+            return {status: 400, message: "Username and password are required"};
+        }
+        const query = "SELECT * FROM `users` WHERE `username` = ?";
         const user = await executeQuery(query, [username]);
         if(user.length === 0){
             return {status: 401, message: "Invalid username or password"};
-        }else{
-            const isValidPassword = await bcrypt.compare(password, user[0].password);
-            if(isValidPassword){
-                return {status: 200, message: "Login successful", account: user};
-            }else{
-                return {status: 401, message: "Invalid username or password"};
-            }
         }
-    }catch(error){
-        console.error("An error occurred while trying to login:", error);
-        throw error;
-    }
-}
-
-async function loginEmail(email, password){
-    const query = "SELECT * FROM users WHERE email = ?";
-    try{
-        const user = await executeQuery(query, [email]);
-        if(user.length > 0){
-            const isValidPassword = await bcrypt.compare(password, user[0].password);
-            if(isValidPassword){
-                return {status: 200, message: "Login successful", account: user};
-            }else{
-                return {status: 401, message: "Invalid email or password"};
-            }
-        }else{
-            return {status: 401, message: "Invalid email or password"};
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
+        if(!isValidPassword){
+            return {status: 401, message: "Invalid username or password"};
         }
+        return {status: 200, message: "Login successful", account: user, result: user[0]};
     }catch(error){
         console.error("An error occurred while trying to login:", error);
         throw error;
@@ -161,7 +141,7 @@ async function changeUsername(userid, password, newUsername){
 
 async function refundUserMoney(userid, productid) {
     try{
-      const query = "SELECT * FROM `orders` WHERE `userid` = ? AND `productid` = ? AND `status` = ?";
+      let query = "SELECT * FROM `orders` WHERE `userid` = ? AND `productid` = ? AND `status` = ?";
       const order = await executeQuery(query, [userid, productid, "Pending"]);
   
       if(order.length === 0){
@@ -191,4 +171,12 @@ async function refundUserMoney(userid, productid) {
     }
   }
 
-module.exports = {loginUsername, createAccount, loginEmail, getUserMoney, setUserMoney, refundUserMoney};
+module.exports = {
+    loginUsername, 
+    createAccount,  
+    getUserMoney, 
+    setUserMoney, 
+    refundUserMoney,
+    changeUsername,
+    changePassword
+};
