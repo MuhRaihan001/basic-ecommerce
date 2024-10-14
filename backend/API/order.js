@@ -3,7 +3,8 @@ const verifyToken = require("../middleware/verify");
 const route = express.Router();
 const {
     addOrderList,
-    showUserOrderList
+    showUserOrderList,
+    deleteOrder
 } = require("../src/orderList");
 
 route.get("/:id", verifyToken, async (req, res) =>{
@@ -22,6 +23,17 @@ route.post("/add", verifyToken, async (req, res) =>{
         const orderList = await addOrderList(userid, productid, date, "Pending");
         res.status(orderList.status).json(orderList);
     }catch(error){
+        res.status(500).json({status: 500, message: error.message});
+    }
+})
+
+route.post("/delete", verifyToken, async (req, res) =>{
+    const { orderid, userid } = req.body;
+    try{
+        const result = deleteOrder(orderid, userid);
+        res.status(result.status).json(result);
+    }catch(error){
+        console.log(error);
         res.status(500).json({status: 500, message: error.message});
     }
 })

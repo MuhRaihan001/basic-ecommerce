@@ -1,5 +1,5 @@
 const { executeQuery } = require("./query/sql");
-const { loginUsername } = require("./user");
+const { loginUsername, refundUserMoney } = require("./user");
 
 async function showUserOrderList(userid){
     const query = `SELECT * FROM orders WHERE userid = ?`;
@@ -23,4 +23,28 @@ async function addOrderList(userid, productid, orderdate, status){
     }
 }
 
-module.exports = { addOrderList, showUserOrderList };
+async function deleteOrder(orderid, userid){
+    try{
+        if(!orderid || !userid){
+            return { status: 400, message: "invalid orderid or userid" };
+        }
+
+        const query = "SELECT * FROM `orders` WHERE `id` = ? AND `userid` = ?";
+        const result = await executeQuery(query, [orderid, userid]);
+
+        if(result.length === 0){
+            return { status: 404, message: "order not found" };
+        }
+
+        const deleteQuery = "DELETE FROM `orders` WHERE `id` = ? AND `userid` = ?";
+        await executeQuery(deleteQuery, [orderid, userid]);
+        refundUserMoney(userid, result[0].productid);
+        return { status: 200, message: "success delete order" };
+
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
+
+module.exports = { addOrderList, showUserOrderList, deleteOrder };
