@@ -27,7 +27,7 @@ route.post("/add", verifyToken, async (req, res) =>{
     }
 })
 
-route.post("/delete", verifyToken, async (req, res) =>{
+route.delete("/delete", verifyToken, async (req, res) =>{
     const { orderid, userid } = req.body;
     try{
         const result = deleteOrder(orderid, userid);

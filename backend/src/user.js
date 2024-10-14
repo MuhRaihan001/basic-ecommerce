@@ -169,7 +169,32 @@ async function refundUserMoney(userid, productid) {
       console.error("An error occurred while trying to refund user money:", error);
       throw error;
     }
-  }
+}
+
+async function changeEmail(userid, password, newEmail){
+    try{
+        const query = "SELECT * FROM `users` WHERE `id` = ?";
+        const user = await executeQuery(query, [userid]);
+
+        if(user.length === 0){
+            return { status: 404, message: "User not found" };
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user[0].password);
+        if(!isValidPassword){
+            return {status: 401, message: "Invalid password"};
+        }
+
+        const updateQuery = "UPDATE `users` SET `email` = ? WHERE `id` = ?";
+        await executeQuery(updateQuery, [newEmail, userid]);
+        return { status: 200, message: "Email updated successfully" };
+         
+
+    }catch(error){
+        console.error("An error occurred while trying to change email:", error);
+        throw error;
+    }
+}
 
 module.exports = {
     loginUsername, 
