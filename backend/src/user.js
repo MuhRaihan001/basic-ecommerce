@@ -203,5 +203,6 @@ module.exports = {
     setUserMoney, 
     refundUserMoney,
     changeUsername,
-    changePassword
+    changePassword,
+    changeEmail
 };

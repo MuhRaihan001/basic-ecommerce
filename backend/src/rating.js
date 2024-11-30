@@ -25,4 +25,15 @@ async function giveReview(productid, name, star, review) {
     }
 }
 
-module.exports = { giveReview, showProductReview }
+async function deleteRating(productid, userid){
+    const query = "DELETE FROM `ratings` WHERE productid = ? AND userid = ?";
+    try{
+        await executeQuery(query, [productid, userid]);
+        return {status: 200, message: "rating deleted successfully"};
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
+
+module.exports = { giveReview, showProductReview, deleteRating }

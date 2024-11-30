@@ -25,9 +25,9 @@ async function findProduct(name){
         const result = await executeQuery(query, [`%${name}%`]);
         if(result.length > 0){
             return {status: 200, message: "Product found successfully", product: result[0]};
-        }else{
-            return {status: 404, message: "Product not found"};
         }
+        return {status: 404, message: "Product not found"};
+        
     }catch(error){
         throw error;
     }
@@ -123,6 +123,7 @@ async function getTotalStock(){
         throw error;
     }
 }
+
 
 module.exports = {
     productList,
