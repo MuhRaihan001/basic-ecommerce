@@ -3,6 +3,11 @@ const { executeQuery } = require("./query/sql");
 async function addWishList(userid, productid, amount){
     try{
         const query = 'INSERT INTO `wishlist` (userid, productid, amount) VALUE (?, ?, ?)';
+        const productQuery = "SELECT * FROM `product` WHERE `id` = ?";
+        const product = await executeQuery(productQuery, [productid]);
+        if(product[0].stock < amount){
+            return { status: 409, message: "Insufficient stock of goods" };
+        }
         await executeQuery(query, [userid, productid, amount]);
         return { status: 200, message: "success add product to wishlist"};
     }catch(error){

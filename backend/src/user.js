@@ -31,10 +31,6 @@ async function createAccount(username, email, password){
             return {status: 409, message: "Username or Email already exists"};
         }
 
-        if(password.length < 8){
-            return {status: 400, message: "Password must be at least 8 characters"};
-        }
-
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
         if (!passwordRegex.test(password)) {
             return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
