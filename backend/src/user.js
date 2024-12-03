@@ -31,7 +31,7 @@ async function createAccount(username, email, password){
             return {status: 409, message: "Username or Email already exists"};
         }
 
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_])[A-Za-z\d@$!%*#?&_]{8,}$/;
         if (!passwordRegex.test(password)) {
             return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
         }
@@ -73,7 +73,7 @@ async function changePassword(userid, password, newPassword){
             return {status: 400, message: "Missing required fields"};
         }
 
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_])[A-Za-z\d@$!%*#?&_]{8,}$/;
         if (!passwordRegex.test(newPassword)) {
             return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
         }
