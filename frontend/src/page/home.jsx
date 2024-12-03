@@ -76,6 +76,26 @@ function Home() {
     );
   };
 
+  const wishlistHandle = async (amount) =>{
+    if (!selectedProduct) return;   
+    fetchAPI(
+        `/add/${data.account[0].id}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json"  },
+            body: JSON.stringify({
+                productid: selectedProduct.id,
+                amount: amount
+            })
+        },
+        async () =>{
+            alert("Product added to wishlist");
+            setSelectedProduct(null);
+        }
+    )
+  }
+
+
   const addOrder = async (productId) => {
     const currentDate = new Date().toISOString().split("T")[0];
     fetchAPI(
@@ -173,6 +193,7 @@ function Home() {
                   setQuantity(Math.max(1, Math.min(selectedProduct.stock, e.target.value)))
                 }
               />
+              <button onClick={() => wishlistHandle(1)}>Add to wishlist</button>
               <button onClick={() => handleBuyProduct(quantity)}>Check out</button>
             </div>
           </div>

@@ -124,6 +124,16 @@ async function getTotalStock(){
     }
 }
 
+async function getTopSold(){
+    try{
+        const query = "SELECT * FROM product ORDER BY sold DESC LIMIT 5";
+        const result = await executeQuery(query);
+        return { status: 200, message: "top sold product sended succesfully", result: result }
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
 
 module.exports = {
     productList,
@@ -134,5 +144,6 @@ module.exports = {
     addProductStock, 
     checkOutProduct,
     getTotalProductSold,
-    getTotalStock
+    getTotalStock,
+    getTopSold
 };

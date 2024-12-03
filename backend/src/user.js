@@ -25,14 +25,27 @@ const setUserMoney = async (userid, amount) =>{
     await executeQuery(query, [amount, userid]);
 }
 
+const isValidEmail = (email) =>{
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+const isValidRegexPassword = (password) =>{
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_])[A-Za-z\d@$!%*#?&_]{8,}$/;
+    return passwordRegex.test(password);
+}
+
 async function createAccount(username, email, password){
     try{
         if(await isUsernameExist(username) || await isEmailExist(email)){
             return {status: 409, message: "Username or Email already exists"};
         }
 
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_])[A-Za-z\d@$!%*#?&_]{8,}$/;
-        if (!passwordRegex.test(password)) {
+        if(!isValidEmail(email)){
+            return {status: 400, message: "Invalid email"};
+        }
+
+        if (isValidRegexPassword(password)) {
             return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
         }
 
@@ -73,8 +86,7 @@ async function changePassword(userid, password, newPassword){
             return {status: 400, message: "Missing required fields"};
         }
 
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&_])[A-Za-z\d@$!%*#?&_]{8,}$/;
-        if (!passwordRegex.test(newPassword)) {
+        if (!isValidRegexPassword(newPassword)) {
             return { status: 400, message: "Password must be at least 8 characters long and contain letters, numbers, and special characters" };
         }
 
@@ -179,6 +191,10 @@ async function changeEmail(userid, password, newEmail){
         const isValidPassword = await bcrypt.compare(password, user[0].password);
         if(!isValidPassword){
             return {status: 401, message: "Invalid password"};
+        }
+
+        if(!isValidEmail(email)){
+            return {status: 400, message: "Invalid email"};
         }
 
         const updateQuery = "UPDATE `users` SET `email` = ? WHERE `id` = ?";
