@@ -4,7 +4,9 @@ const jwt = require("jsonwebtoken");
 const {
     loginUsername, 
     createAccount,  
-    refundUserMoney
+    refundUserMoney,
+    sendVerificationCode,
+    verifyVerificationCode
 } = require("../src/user");
 
 require("dotenv").config();
@@ -41,6 +43,28 @@ router.post("/reffund", verifyToken,  async (req, res) =>{
     const { id, productid } = req.body;
     try{
         const response = await refundUserMoney(id, productid);
+        res.status(response.status).json(response);
+    }catch(error){
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+})
+
+router.post("/sendcode", async (req, res) => {
+    const { email } = req.body;
+    try{
+        const response = await sendVerificationCode(email);
+        res.status(response.status).json(response);
+    }catch(error){
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+})
+
+router.post("/verifycode", async (req, res) =>{
+    try{
+        const { email, code } = req.body;
+        const response = await verifyVerificationCode(email, code);
         res.status(response.status).json(response);
     }catch(error){
         console.log(error);
